@@ -1,0 +1,43 @@
+"""Entry program for news-image-20261117 (stdlib only).
+
+The picture itself sits next to this file as news.png: a one-page
+broadsheet of the world news of Tuesday, 17 November 2026, drawn by
+render.py (Pillow, run at build time) — a hero panel on the Kerch Bridge
+strike, four panels on the Hormuz tanker attacks, Trump in Manila,
+Nvidia's earnings and the DR Congo Ebola outbreak, plus an "Also today"
+strip on Bahrain and the JPMorgan bug.
+
+All this program does is deliver those bytes, untouched, to the output
+path the harness expects. It runs with no network and writes the same
+bytes on every run.
+"""
+
+import os
+import shutil
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+SOURCE = os.path.join(HERE, "news.png")
+LIMIT = 1048576
+
+
+def output_path():
+    out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR") or "/output"
+    return os.path.join(out_dir, "entry.png")
+
+
+def main():
+    # The gate rejects anything over 1 MiB, so fail loudly if the bundled
+    # picture ever grows past the cap instead of writing a bad entry.
+    if os.path.getsize(SOURCE) > LIMIT:
+        raise SystemExit("news.png exceeds the 1 MiB entry limit")
+    target = output_path()
+    os.makedirs(os.path.dirname(target), exist_ok=True)
+    shutil.copyfile(SOURCE, target)
+    # The grader runs this twice and demands identical bytes: confirm the
+    # copy landed whole before reporting success.
+    if os.path.getsize(target) != os.path.getsize(SOURCE):
+        raise SystemExit("entry.png copy is incomplete")
+
+
+if __name__ == "__main__":
+    main()
